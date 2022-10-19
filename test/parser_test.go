@@ -35,13 +35,6 @@ var sampleContent = map[string]string{
 // test functions //
 ////////////////////
 
-func f(shouldPanic bool) string {
-	if shouldPanic {
-		panic("function panicked")
-	}
-	return "function didn't panic"
-}
-
 func TestValidParser(t *testing.T) {
 
 	t.Run("testValid", func(t *testing.T) {
