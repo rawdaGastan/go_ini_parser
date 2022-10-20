@@ -20,20 +20,22 @@ protected = true
 - Create a new parser struct
 
 ```go
-parser := ini.Parser{}
+import "github.com/rawdaGastan/go_ini_parser/ini"
+
+parser := NewParser()
 ```
 
 - You can parse a file
 
 ```go
-parser.FromFile("*.ini")
+parser.FromFile("INI_FILE_PATH")
 ```
 
 - You can parse a string
 
 ```go
-str := "[owner]\nname=John\norganization = threefold"
-parser.FromString(str)
+iniContent := "[owner]\nname=John\norganization = threefold"
+parser.FromString(iniContent)
 ```
 
 ## Functions

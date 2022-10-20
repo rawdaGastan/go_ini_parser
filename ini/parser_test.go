@@ -29,7 +29,7 @@ var sampleContent = map[string]string{
 func TestValidParser(t *testing.T) {
 
 	t.Run("testValid", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		err := parser.FromString(sampleContent["valid"])
 
 		if err != nil {
@@ -38,7 +38,7 @@ func TestValidParser(t *testing.T) {
 	})
 
 	t.Run("test_valid_comment", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		err := parser.FromString(sampleContent["valid_comment"])
 
 		if err != nil {
@@ -47,7 +47,7 @@ func TestValidParser(t *testing.T) {
 	})
 
 	t.Run("test_valid_empty", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		err := parser.FromString(sampleContent["valid_empty"])
 
 		if err != nil {
@@ -56,7 +56,7 @@ func TestValidParser(t *testing.T) {
 	})
 
 	t.Run("test_value", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		err := parser.FromString(sampleContent["valid"])
 
 		if err != nil {
@@ -113,7 +113,7 @@ func TestValidParser(t *testing.T) {
 	})
 
 	t.Run("test_parsed_sections", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["valid"])
 
 		want := []string{"owner", "database"}
@@ -125,7 +125,7 @@ func TestValidParser(t *testing.T) {
 	})
 
 	t.Run("test_parsed_section", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["valid"])
 
 		want := map[string]string{"name": "John", "organization": "threefold"}
@@ -137,7 +137,7 @@ func TestValidParser(t *testing.T) {
 	})
 
 	t.Run("test_parsed_options", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["valid"])
 
 		want := []string{"name", "organization"}
@@ -149,7 +149,7 @@ func TestValidParser(t *testing.T) {
 	})
 
 	t.Run("test_parsed_option", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["valid"])
 
 		if got, _ := parser.GetOption("owner", "name"); got != "John" {
@@ -158,7 +158,7 @@ func TestValidParser(t *testing.T) {
 	})
 
 	t.Run("test_set_option", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["valid"])
 		parser.SetOption("owner", "name", "Ali")
 
@@ -168,7 +168,7 @@ func TestValidParser(t *testing.T) {
 	})
 
 	t.Run("test_parsed_functions", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["valid"])
 
 		parsed := parser.GetParsedMap()
@@ -186,7 +186,7 @@ func TestValidParser(t *testing.T) {
 	})
 
 	t.Run("test_no_sections", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["invalid_no_sections"])
 
 		sections := parser.GetSections()
@@ -197,7 +197,7 @@ func TestValidParser(t *testing.T) {
 	})
 
 	t.Run("test_no_options", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["invalid_no_options"])
 
 		options := parser.GetOptions("owner")
@@ -208,7 +208,7 @@ func TestValidParser(t *testing.T) {
 	})
 
 	t.Run("test_set_option_old_option", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["valid"])
 		parser.SetOption("owner", "name", "Ali")
 
@@ -218,7 +218,7 @@ func TestValidParser(t *testing.T) {
 	})
 
 	t.Run("test_set_option_no_option", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["valid"])
 		parser.SetOption("owner", "age", "30")
 
@@ -232,7 +232,7 @@ func TestValidParser(t *testing.T) {
 func TestInValidParser(t *testing.T) {
 
 	t.Run("test_invalid", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		err := parser.FromString(sampleContent["invalid"])
 
 		if err == nil {
@@ -241,7 +241,7 @@ func TestInValidParser(t *testing.T) {
 	})
 
 	t.Run("test_invalid_section", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		err := parser.FromString(sampleContent["invalid_section"])
 
 		if err == nil {
@@ -250,7 +250,7 @@ func TestInValidParser(t *testing.T) {
 	})
 
 	t.Run("test_unclosed_section", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		err := parser.FromString(sampleContent["invalid_unclosed_section"])
 
 		if err == nil {
@@ -259,7 +259,7 @@ func TestInValidParser(t *testing.T) {
 	})
 
 	t.Run("test_unopened_section", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		err := parser.FromString(sampleContent["invalid_unopened_section"])
 
 		if err == nil {
@@ -268,7 +268,7 @@ func TestInValidParser(t *testing.T) {
 	})
 
 	t.Run("test_no_equal", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		err := parser.FromString(sampleContent["invalid_no_equal"])
 
 		if err == nil {
@@ -277,7 +277,7 @@ func TestInValidParser(t *testing.T) {
 	})
 
 	t.Run("test_no_value", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		err := parser.FromString(sampleContent["invalid_no_value"])
 
 		if err == nil {
@@ -286,7 +286,7 @@ func TestInValidParser(t *testing.T) {
 	})
 
 	t.Run("test_no_key", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		err := parser.FromString(sampleContent["invalid_no_key"])
 
 		if err == nil {
@@ -295,7 +295,7 @@ func TestInValidParser(t *testing.T) {
 	})
 
 	t.Run("test_more_than_one_equal", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		err := parser.FromString(sampleContent["invalid_more_than_one_equal"])
 
 		if err == nil {
@@ -307,7 +307,7 @@ func TestInValidParser(t *testing.T) {
 func TestWrongValues(t *testing.T) {
 
 	t.Run("test_wrong_section", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		err := parser.FromString(sampleContent["valid"])
 
 		_, err = parser.GetSection("ownerr")
@@ -318,7 +318,7 @@ func TestWrongValues(t *testing.T) {
 	})
 
 	t.Run("test_wrong_value", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["valid"])
 
 		if option, _ := parser.GetOption("owner", "server"); option == "John" {
@@ -327,7 +327,7 @@ func TestWrongValues(t *testing.T) {
 	})
 
 	t.Run("test_wrong_bool", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["valid"])
 
 		_, err := parser.GetBool("database", "server")
@@ -338,7 +338,7 @@ func TestWrongValues(t *testing.T) {
 	})
 
 	t.Run("test_wrong_int", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["valid"])
 
 		_, err := parser.GetInt("database", "protected")
@@ -349,7 +349,7 @@ func TestWrongValues(t *testing.T) {
 	})
 
 	t.Run("test_wrong_float", func(t *testing.T) {
-		parser := Parser{}
+		parser := NewParser()
 		parser.FromString(sampleContent["valid"])
 
 		_, err := parser.GetFloat("database", "protected")

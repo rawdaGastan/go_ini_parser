@@ -16,7 +16,7 @@ type Parser struct {
 	parsedMap INIMap
 }
 
-func (p *Parser) addParent(parent string) {
+func (p *Parser) ensureSection(parent string) {
 	// check if the parent does not exist in the parsed dict
 	if p.parsedMap[parent] == nil {
 		p.parsedMap[parent] = Entry{}
@@ -25,9 +25,15 @@ func (p *Parser) addParent(parent string) {
 
 func (p *Parser) add(parent string, key string, value string) {
 	// add the parent first
-	p.addParent(parent)
+	p.ensureSection(parent)
 
 	p.parsedMap[parent][key] = value
+}
+
+// NewParser creates new instance from the parser
+func NewParser() Parser {
+	parser := Parser{}
+	return parser
 }
 
 // GetParsedMap return the parsed map of the struct
@@ -84,10 +90,10 @@ func (p *Parser) FromString(content string) error {
 	p.parsedMap = INIMap{}
 	key := ""
 	val := ""
-	parent := ""
+	section := ""
 
 	// for parents
-	newParent := false
+	newSection := false
 
 	// read content lines
 	scanner := bufio.NewScanner(s.NewReader(content))
@@ -102,15 +108,15 @@ func (p *Parser) FromString(content string) error {
 			if string(line[0]) == "[" && string(line[len(line)-1]) == "]" {
 				// check number of opened and closed sections []
 				if s.Count(line, "[") == 1 && s.Count(line, "]") == 1 {
-					parent = line[1 : len(line)-1]
-					p.addParent(parent)
-					newParent = true
+					section = line[1 : len(line)-1]
+					p.ensureSection(section)
+					newSection = true
 				} else {
-					return fmt.Errorf("invalid section %v! please make sure that you have one '[' and one ']'", parent)
+					return fmt.Errorf("invalid section %v! please make sure that you have one '[' and one ']'", section)
 				}
 
 				// parse sections values
-			} else if newParent && s.Count(line, "=") == 1 && (!contains([]string{"", "=", " "}, string(line[0])) && !contains([]string{"", "=", " "}, string(line[len(line)-1]))) {
+			} else if newSection && s.Count(line, "=") == 1 && (!contains([]string{"", "=", " "}, string(line[0])) && !contains([]string{"", "=", " "}, string(line[len(line)-1]))) {
 				if s.Contains(line, " = ") {
 					splitted := s.Split(line, " = ")
 					key = splitted[0]
@@ -121,7 +127,7 @@ func (p *Parser) FromString(content string) error {
 					val = splitted[1]
 				}
 
-				p.add(parent, key, val)
+				p.add(section, key, val)
 
 				// parse comment lines
 			} else if string(line[0]) == ";" {
@@ -129,7 +135,7 @@ func (p *Parser) FromString(content string) error {
 
 				// invlid content
 			} else {
-				return fmt.Errorf("not a valid ini content")
+				return fmt.Errorf("invalid ini content")
 			}
 
 			// parse empty
@@ -138,7 +144,7 @@ func (p *Parser) FromString(content string) error {
 
 			// invlid content
 		} else {
-			return fmt.Errorf("not a valid ini content")
+			return fmt.Errorf("invalid ini content")
 		}
 	}
 
