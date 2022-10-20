@@ -8,16 +8,6 @@ import (
 	s "strings"
 )
 
-// Helpers
-func contains(array []string, element string) bool {
-	for _, x := range array {
-		if x == element {
-			return true
-		}
-	}
-	return false
-}
-
 type Entry = map[string]string
 type INIMap = map[string]Entry
 
@@ -26,11 +16,7 @@ type Parser struct {
 	parsedMap INIMap
 }
 
-/////////////////////
-// inner functions //
-/////////////////////
-
-func (p *Parser) addParent(parent string) {
+func (p *Parser) ensureSection(parent string) {
 	// check if the parent does not exist in the parsed dict
 	if p.parsedMap[parent] == nil {
 		p.parsedMap[parent] = Entry{}
@@ -39,69 +25,75 @@ func (p *Parser) addParent(parent string) {
 
 func (p *Parser) add(parent string, key string, value string) {
 	// add the parent first
-	p.addParent(parent)
+	p.ensureSection(parent)
 
 	p.parsedMap[parent][key] = value
 }
 
-////////////////////
-// user functions //
-////////////////////
+// NewParser creates new instance from the parser
+func NewParser() Parser {
+	parser := Parser{}
+	return parser
+}
 
+// GetParsedMap return the parsed map of the struct
 func (p *Parser) GetParsedMap() INIMap {
 	return p.parsedMap
 }
 
-func (p *Parser) ToString() string {
-	var parsedStr string = ""
+// String converts the parsed map to ini string and returns it
+func (p *Parser) String() string {
+	formattedStr := ""
 
 	for parent, dict := range p.parsedMap {
-		parsedStr += fmt.Sprintf("[%s]\n", parent)
+		formattedStr += fmt.Sprintf("[%s]\n", parent)
 		for key, val := range dict {
-			parsedStr += fmt.Sprintf("%s = %s\n", key, val)
+			formattedStr += fmt.Sprintf("%s = %s\n", key, val)
 		}
-		parsedStr += "\n"
+		formattedStr += "\n"
 	}
 
-	return parsedStr
+	return formattedStr
 }
 
+// FromFile read an ini file and converts it to a parsed map
 func (p *Parser) FromFile(filename string) error {
 	file, err := os.ReadFile(filename)
 
-	if err == nil {
-		p.FromString(string(file))
+	if err != nil {
+		return err
 	}
 
-	return err
+	p.FromString(string(file))
+	return nil
 }
 
-// TODO: SaveToFile, read from file
+// SaveToFile saves the parsed map as ini file in the specified path after converting to string
 func (p *Parser) SaveToFile(path string) error {
-	// saves the parsed dict as ini file in the specified path after converting to string
+
 	file, err := os.Create(path)
 	defer file.Close()
 
-	if err == nil {
-		_, err = file.WriteString(p.ToString())
+	if err != nil {
+		return err
 	}
+
+	_, err = file.WriteString(p.String())
 
 	return err
 }
 
+// FromString parses the ini content as :
+// [section1: map[key1: value1 key2: value2 ...] section2: map[key1: value1 key2: value2 ...] ...]
 func (p *Parser) FromString(content string) error {
-	// parse the ini content as :
-	// [section1: map[key1: value1 key2: value2 ...] section2: map[key1: value1 key2: value2 ...] ...]
-
-	var err error
 
 	p.parsedMap = INIMap{}
-	var key string
-	var val string
-	var parent string
+	key := ""
+	val := ""
+	section := ""
 
 	// for parents
-	var newParent bool = false
+	newSection := false
 
 	// read content lines
 	scanner := bufio.NewScanner(s.NewReader(content))
@@ -116,15 +108,15 @@ func (p *Parser) FromString(content string) error {
 			if string(line[0]) == "[" && string(line[len(line)-1]) == "]" {
 				// check number of opened and closed sections []
 				if s.Count(line, "[") == 1 && s.Count(line, "]") == 1 {
-					parent = line[1 : len(line)-1]
-					p.addParent(parent)
-					newParent = true
+					section = line[1 : len(line)-1]
+					p.ensureSection(section)
+					newSection = true
 				} else {
-					err = InvalidSection
+					return fmt.Errorf("invalid section %v! please make sure that you have one '[' and one ']'", section)
 				}
 
 				// parse sections values
-			} else if newParent && s.Count(line, "=") == 1 && (!contains([]string{"", "=", " "}, string(line[0])) && !contains([]string{"", "=", " "}, string(line[len(line)-1]))) {
+			} else if newSection && s.Count(line, "=") == 1 && (!contains([]string{"", "=", " "}, string(line[0])) && !contains([]string{"", "=", " "}, string(line[len(line)-1]))) {
 				if s.Contains(line, " = ") {
 					splitted := s.Split(line, " = ")
 					key = splitted[0]
@@ -135,7 +127,7 @@ func (p *Parser) FromString(content string) error {
 					val = splitted[1]
 				}
 
-				p.add(parent, key, val)
+				p.add(section, key, val)
 
 				// parse comment lines
 			} else if string(line[0]) == ";" {
@@ -143,7 +135,7 @@ func (p *Parser) FromString(content string) error {
 
 				// invlid content
 			} else {
-				err = InvalidContent
+				return fmt.Errorf("invalid ini content")
 			}
 
 			// parse empty
@@ -152,166 +144,132 @@ func (p *Parser) FromString(content string) error {
 
 			// invlid content
 		} else {
-			err = InvalidContent
+			return fmt.Errorf("invalid ini content")
 		}
 	}
 
-	return err
+	return nil
 }
 
-func (p *Parser) ToDict() INIMap {
-	// Get the parsed dictionary as :
-	// [section1: map[key1: value1 key2: value2 ...] section2: map[key1: value1 key2: value2 ...] ...]
+// GetSections returns a list of all sections --> [section1 section2 ...]
+func (p *Parser) GetSections() []string {
 
-	return p.parsedMap
-}
-
-func (p *Parser) GetSections() ([]string, error) {
-	// returns a list of all sections --> [section1 section2 ...]
-
-	var err error
 	var sections []string
 
 	for parent := range p.parsedMap {
 		sections = append(sections, parent)
 	}
 
-	// if no data in the parsed dict
-	if len(sections) == 0 {
-		err = NoParsedData
-	}
-
-	return sections, err
+	return sections
 }
 
+// GetSection returns a dictionary for the section given --> map[key1: val1 key2: val2 ....]
 func (p *Parser) GetSection(sectionKey string) (Entry, error) {
-	// returns a dictionary for the section given --> map[key1: val1 key2: val2 ....]
 
-	sections, err := p.GetSections()
+	sections := p.GetSections()
 	var section Entry
 
-	if err == nil && !contains(sections, sectionKey) {
-		err = SectionNotExist
+	if !contains(sections, sectionKey) {
+		return section, fmt.Errorf("section %v does not exist", sectionKey)
 	} else {
 		section = p.parsedMap[sectionKey]
 	}
-	return section, err
+	return section, nil
 }
 
-func (p *Parser) GetOptions(sectionKey string) ([]string, error) {
-	// returns all options of the given section
+// GetOptions returns all options of the given section
+func (p *Parser) GetOptions(sectionKey string) []string {
 
-	section, err := p.GetSection(sectionKey)
+	section, _ := p.GetSection(sectionKey)
 	var options []string
 
-	if err == nil {
-		for key := range section {
-			options = append(options, key)
-		}
-
-		if len(options) == 0 {
-			err = OptionsNotExist
-		}
+	for key := range section {
+		options = append(options, key)
 	}
 
-	return options, err
+	return options
 }
 
+// GetOption returns the value of the option key which belongs to the section key given
 func (p *Parser) GetOption(sectionKey string, optionKey string) (string, error) {
-	// returns the value of the option key which belongs to the section key given
 
-	section, err := p.GetOptions(sectionKey)
+	option := ""
 
-	var options []string
-	var option string
-
-	if err == nil {
-		for _, value := range section {
-			options = append(options, value)
-		}
-
-		if !contains(section, optionKey) {
-			err = OptionNotExist
-		} else {
-			option = p.parsedMap[sectionKey][optionKey]
-		}
+	if option, exists := p.parsedMap[sectionKey][optionKey]; exists {
+		return option, nil
 	}
 
-	return option, err
+	return option, fmt.Errorf("option %v does not exist in the given section %v", optionKey, sectionKey)
 }
 
+// SetOption updates the option value in the given section
+// If the section key does not exist it inserts the section key in the map with its option and value
 func (p *Parser) SetOption(sectionKey string, optionKey string, optionValue string) error {
-	// update the option in the given section
 
-	section, err := p.GetOptions(sectionKey)
+	section := p.GetOptions(sectionKey)
 
 	var options []string
 
-	if err == nil {
-		for _, value := range section {
-			options = append(options, value)
-		}
-
-		// if no data in the parsed dict
-		if !contains(section, optionKey) {
-			err = OptionNotExist
-		} else {
-			p.parsedMap[sectionKey][optionKey] = optionValue
-		}
+	for _, value := range section {
+		options = append(options, value)
 	}
 
-	return err
+	p.parsedMap[sectionKey][optionKey] = optionValue
+
+	return nil
 }
 
-////////////////////
-// values getters //
-////////////////////
-
+// GetBool returns the bool value of the option key which belongs to the section key given
+// Bool could be : true, false, True, False, yes, no, 1, 0
 func (p *Parser) GetBool(sectionKey string, optionKey string) (bool, error) {
-	// returns the bool value of the option key which belongs to the section key given
-	// bool could be : true, false, True, False, yes, no, 1, 0
 
 	boolOption := false
 
 	option, err := p.GetOption(sectionKey, optionKey)
 
-	if err == nil {
-		if contains([]string{"true", "True", "yes", "1"}, option) {
-			boolOption = true
-
-		} else if contains([]string{"false", "False", "no", "0"}, option) {
-			boolOption = false
-
-		} else {
-			err = InvalidBoolean
-		}
+	if err != nil {
+		return boolOption, err
 	}
 
-	return boolOption, err
+	if contains([]string{"true", "True", "yes", "1"}, option) {
+		boolOption = true
+
+	} else if contains([]string{"false", "False", "no", "0"}, option) {
+		boolOption = false
+
+	} else {
+		return boolOption, fmt.Errorf("%v is not a valid boolean", option)
+	}
+
+	return boolOption, nil
 }
 
+// GetInt returns the int value of the option key which belongs to the section key given
 func (p *Parser) GetInt(sectionKey string, optionKey string) (int64, error) {
-	// returns the int value of the option key which belongs to the section key given
 
 	option, err := p.GetOption(sectionKey, optionKey)
 	var parsedInt int64
 
-	if err == nil {
-		parsedInt, err = strconv.ParseInt(option, 10, 32)
+	if err != nil {
+		return parsedInt, err
 	}
+
+	parsedInt, err = strconv.ParseInt(option, 10, 32)
 
 	return parsedInt, err
 }
 
+// GetFloat returns the float value of the option key which belongs to the section key given
 func (p *Parser) GetFloat(sectionKey string, optionKey string) (float64, error) {
-	// returns the float value of the option key which belongs to the section key given
 
 	option, err := p.GetOption(sectionKey, optionKey)
 	var parsedFloat float64
 
-	if err == nil {
-		parsedFloat, err = strconv.ParseFloat(option, 64)
+	if err != nil {
+		return parsedFloat, err
 	}
+
+	parsedFloat, err = strconv.ParseFloat(option, 64)
 
 	return parsedFloat, err
 }
