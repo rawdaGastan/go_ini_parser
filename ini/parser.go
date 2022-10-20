@@ -64,14 +64,17 @@ func (p *Parser) FromFile(filename string) error {
 		return err
 	}
 
-	p.FromString(string(file))
-	return nil
+	err = p.FromString(string(file))
+	return err
 }
 
 // SaveToFile saves the parsed map as ini file in the specified path after converting to string
 func (p *Parser) SaveToFile(path string) error {
 
 	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
 	if err != nil {
@@ -98,10 +101,8 @@ func (p *Parser) FromString(content string) error {
 	// read content lines
 	scanner := bufio.NewScanner(s.NewReader(content))
 	for scanner.Scan() {
-		s.ReplaceAll(scanner.Text(), "\n", "")
-		s.ReplaceAll(scanner.Text(), "\r", "")
-
-		line := scanner.Text()
+		line := s.ReplaceAll(scanner.Text(), "\n", "")
+		line = s.ReplaceAll(scanner.Text(), "\r", "")
 
 		if len(line) > 0 {
 			// parse sections
@@ -204,19 +205,8 @@ func (p *Parser) GetOption(sectionKey string, optionKey string) (string, error) 
 
 // SetOption updates the option value in the given section
 // If the section key does not exist it inserts the section key in the map with its option and value
-func (p *Parser) SetOption(sectionKey string, optionKey string, optionValue string) error {
-
-	section := p.GetOptions(sectionKey)
-
-	var options []string
-
-	for _, value := range section {
-		options = append(options, value)
-	}
-
+func (p *Parser) SetOption(sectionKey string, optionKey string, optionValue string) {
 	p.parsedMap[sectionKey][optionKey] = optionValue
-
-	return nil
 }
 
 // GetBool returns the bool value of the option key which belongs to the section key given
