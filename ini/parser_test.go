@@ -358,10 +358,13 @@ func TestWrongValues(t *testing.T) {
 	t.Run("test_wrong_section", func(t *testing.T) {
 		parser := NewParser()
 		err := parser.FromString(sampleContent["valid"])
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 
-		_, err = parser.GetSection("ownerr")
+		_, sectionErr := parser.GetSection("ownerr")
 
-		if err == nil {
+		if sectionErr == nil {
 			t.Errorf("ownerr section exists")
 		}
 	})
