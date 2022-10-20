@@ -114,7 +114,11 @@ func TestValidParser(t *testing.T) {
 
 	t.Run("test_parsed_sections", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["valid"])
+		err := parser.FromString(sampleContent["valid"])
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 
 		want := []string{"owner", "database"}
 		got := parser.GetSections()
@@ -126,7 +130,11 @@ func TestValidParser(t *testing.T) {
 
 	t.Run("test_parsed_section", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["valid"])
+		err := parser.FromString(sampleContent["valid"])
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 
 		want := map[string]string{"name": "John", "organization": "threefold"}
 		got, _ := parser.GetSection("owner")
@@ -138,7 +146,11 @@ func TestValidParser(t *testing.T) {
 
 	t.Run("test_parsed_options", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["valid"])
+		err := parser.FromString(sampleContent["valid"])
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 
 		want := []string{"name", "organization"}
 		got := parser.GetOptions("owner")
@@ -150,7 +162,11 @@ func TestValidParser(t *testing.T) {
 
 	t.Run("test_parsed_option", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["valid"])
+		err := parser.FromString(sampleContent["valid"])
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 
 		if got, _ := parser.GetOption("owner", "name"); got != "John" {
 			t.Errorf("Got %v, want John", got)
@@ -159,7 +175,12 @@ func TestValidParser(t *testing.T) {
 
 	t.Run("test_set_option", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["valid"])
+		err := parser.FromString(sampleContent["valid"])
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+
 		parser.SetOption("owner", "name", "Ali")
 
 		if got, _ := parser.GetOption("owner", "name"); got != "Ali" {
@@ -169,7 +190,11 @@ func TestValidParser(t *testing.T) {
 
 	t.Run("test_parsed_functions", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["valid"])
+		err := parser.FromString(sampleContent["valid"])
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 
 		parsed := parser.GetParsedMap()
 
@@ -177,7 +202,13 @@ func TestValidParser(t *testing.T) {
 		testParsedStr := parser.String()
 
 		// parsed map
-		parser.FromString(testParsedStr)
+
+		parsedErr := parser.FromString(testParsedStr)
+
+		if parsedErr != nil {
+			t.Errorf("unexpected error: %v", parsedErr)
+		}
+
 		testParsedDict := parser.GetParsedMap()
 
 		if !reflect.DeepEqual(testParsedDict, parsed) {
@@ -187,7 +218,11 @@ func TestValidParser(t *testing.T) {
 
 	t.Run("test_no_sections", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["invalid_no_sections"])
+		err := parser.FromString(sampleContent["invalid_no_sections"])
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 
 		sections := parser.GetSections()
 
@@ -198,7 +233,11 @@ func TestValidParser(t *testing.T) {
 
 	t.Run("test_no_options", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["invalid_no_options"])
+		err := parser.FromString(sampleContent["invalid_no_options"])
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 
 		options := parser.GetOptions("owner")
 
@@ -209,20 +248,30 @@ func TestValidParser(t *testing.T) {
 
 	t.Run("test_set_option_old_option", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["valid"])
+		err := parser.FromString(sampleContent["valid"])
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+
 		parser.SetOption("owner", "name", "Ali")
 
-		if want, _ := parser.GetOption("owner", "name"); "John" == want {
+		if want, _ := parser.GetOption("owner", "name"); want == "John" {
 			t.Errorf("Got John, want Ali")
 		}
 	})
 
 	t.Run("test_set_option_no_option", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["valid"])
+		err := parser.FromString(sampleContent["valid"])
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+
 		parser.SetOption("owner", "age", "30")
 
-		if want, _ := parser.GetOption("owner", "age"); "30" != want {
+		if want, _ := parser.GetOption("owner", "age"); want != "30" {
 			t.Errorf("Got error, want 30")
 		}
 	})
@@ -309,17 +358,24 @@ func TestWrongValues(t *testing.T) {
 	t.Run("test_wrong_section", func(t *testing.T) {
 		parser := NewParser()
 		err := parser.FromString(sampleContent["valid"])
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 
-		_, err = parser.GetSection("ownerr")
+		_, sectionErr := parser.GetSection("ownerr")
 
-		if err == nil {
+		if sectionErr == nil {
 			t.Errorf("ownerr section exists")
 		}
 	})
 
 	t.Run("test_wrong_value", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["valid"])
+		err := parser.FromString(sampleContent["valid"])
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 
 		if option, _ := parser.GetOption("owner", "server"); option == "John" {
 			t.Errorf("Wrong option value John")
@@ -328,7 +384,11 @@ func TestWrongValues(t *testing.T) {
 
 	t.Run("test_wrong_bool", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["valid"])
+		validErr := parser.FromString(sampleContent["valid"])
+
+		if validErr != nil {
+			t.Errorf("unexpected error: %v", validErr)
+		}
 
 		_, err := parser.GetBool("database", "server")
 
@@ -339,7 +399,11 @@ func TestWrongValues(t *testing.T) {
 
 	t.Run("test_wrong_int", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["valid"])
+		validErr := parser.FromString(sampleContent["valid"])
+
+		if validErr != nil {
+			t.Errorf("unexpected error: %v", validErr)
+		}
 
 		_, err := parser.GetInt("database", "protected")
 
@@ -350,7 +414,11 @@ func TestWrongValues(t *testing.T) {
 
 	t.Run("test_wrong_float", func(t *testing.T) {
 		parser := NewParser()
-		parser.FromString(sampleContent["valid"])
+		validErr := parser.FromString(sampleContent["valid"])
+
+		if validErr != nil {
+			t.Errorf("unexpected error: %v", validErr)
+		}
 
 		_, err := parser.GetFloat("database", "protected")
 

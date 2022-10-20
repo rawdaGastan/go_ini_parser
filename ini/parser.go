@@ -64,23 +64,25 @@ func (p *Parser) FromFile(filename string) error {
 		return err
 	}
 
-	p.FromString(string(file))
-	return nil
+	return p.FromString(string(file))
 }
 
 // SaveToFile saves the parsed map as ini file in the specified path after converting to string
 func (p *Parser) SaveToFile(path string) error {
 
 	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
 	if err != nil {
 		return err
 	}
 
-	_, err = file.WriteString(p.String())
+	_, writeErr := file.WriteString(p.String())
 
-	return err
+	return writeErr
 }
 
 // FromString parses the ini content as :
@@ -98,10 +100,8 @@ func (p *Parser) FromString(content string) error {
 	// read content lines
 	scanner := bufio.NewScanner(s.NewReader(content))
 	for scanner.Scan() {
-		s.ReplaceAll(scanner.Text(), "\n", "")
-		s.ReplaceAll(scanner.Text(), "\r", "")
-
-		line := scanner.Text()
+		line := s.ReplaceAll(scanner.Text(), "\n", "")
+		line = s.ReplaceAll(line, "\r", "")
 
 		if len(line) > 0 {
 			// parse sections
@@ -204,19 +204,8 @@ func (p *Parser) GetOption(sectionKey string, optionKey string) (string, error) 
 
 // SetOption updates the option value in the given section
 // If the section key does not exist it inserts the section key in the map with its option and value
-func (p *Parser) SetOption(sectionKey string, optionKey string, optionValue string) error {
-
-	section := p.GetOptions(sectionKey)
-
-	var options []string
-
-	for _, value := range section {
-		options = append(options, value)
-	}
-
+func (p *Parser) SetOption(sectionKey string, optionKey string, optionValue string) {
 	p.parsedMap[sectionKey][optionKey] = optionValue
-
-	return nil
 }
 
 // GetBool returns the bool value of the option key which belongs to the section key given
@@ -254,9 +243,9 @@ func (p *Parser) GetInt(sectionKey string, optionKey string) (int64, error) {
 		return parsedInt, err
 	}
 
-	parsedInt, err = strconv.ParseInt(option, 10, 32)
+	parsedInt, intErr := strconv.ParseInt(option, 10, 32)
 
-	return parsedInt, err
+	return parsedInt, intErr
 }
 
 // GetFloat returns the float value of the option key which belongs to the section key given
@@ -269,7 +258,7 @@ func (p *Parser) GetFloat(sectionKey string, optionKey string) (float64, error) 
 		return parsedFloat, err
 	}
 
-	parsedFloat, err = strconv.ParseFloat(option, 64)
+	parsedFloat, floatErr := strconv.ParseFloat(option, 64)
 
-	return parsedFloat, err
+	return parsedFloat, floatErr
 }
