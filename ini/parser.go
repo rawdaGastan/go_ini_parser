@@ -80,9 +80,9 @@ func (p *Parser) SaveToFile(path string) error {
 		return err
 	}
 
-	_, err = file.WriteString(p.String())
+	_, writeErr := file.WriteString(p.String())
 
-	return err
+	return writeErr
 }
 
 // FromString parses the ini content as :
@@ -243,9 +243,9 @@ func (p *Parser) GetInt(sectionKey string, optionKey string) (int64, error) {
 		return parsedInt, err
 	}
 
-	parsedInt, err = strconv.ParseInt(option, 10, 32)
+	parsedInt, intErr := strconv.ParseInt(option, 10, 32)
 
-	return parsedInt, err
+	return parsedInt, intErr
 }
 
 // GetFloat returns the float value of the option key which belongs to the section key given
@@ -258,7 +258,7 @@ func (p *Parser) GetFloat(sectionKey string, optionKey string) (float64, error) 
 		return parsedFloat, err
 	}
 
-	parsedFloat, err = strconv.ParseFloat(option, 64)
+	parsedFloat, floatErr := strconv.ParseFloat(option, 64)
 
-	return parsedFloat, err
+	return parsedFloat, floatErr
 }
