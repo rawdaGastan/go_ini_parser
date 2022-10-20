@@ -64,8 +64,7 @@ func (p *Parser) FromFile(filename string) error {
 		return err
 	}
 
-	err = p.FromString(string(file))
-	return err
+	return p.FromString(string(file))
 }
 
 // SaveToFile saves the parsed map as ini file in the specified path after converting to string
@@ -102,7 +101,7 @@ func (p *Parser) FromString(content string) error {
 	scanner := bufio.NewScanner(s.NewReader(content))
 	for scanner.Scan() {
 		line := s.ReplaceAll(scanner.Text(), "\n", "")
-		line = s.ReplaceAll(scanner.Text(), "\r", "")
+		line = s.ReplaceAll(line, "\r", "")
 
 		if len(line) > 0 {
 			// parse sections

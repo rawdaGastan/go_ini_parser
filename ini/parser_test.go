@@ -203,10 +203,10 @@ func TestValidParser(t *testing.T) {
 
 		// parsed map
 
-		err = parser.FromString(testParsedStr)
+		parsedErr := parser.FromString(testParsedStr)
 
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
+		if parsedErr != nil {
+			t.Errorf("unexpected error: %v", parsedErr)
 		}
 
 		testParsedDict := parser.GetParsedMap()
