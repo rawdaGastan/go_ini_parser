@@ -256,7 +256,7 @@ func TestValidParser(t *testing.T) {
 
 		parser.SetOption("owner", "name", "Ali")
 
-		if want, _ := parser.GetOption("owner", "name"); "John" == want {
+		if want, _ := parser.GetOption("owner", "name"); want == "John" {
 			t.Errorf("Got John, want Ali")
 		}
 	})
@@ -271,7 +271,7 @@ func TestValidParser(t *testing.T) {
 
 		parser.SetOption("owner", "age", "30")
 
-		if want, _ := parser.GetOption("owner", "age"); "30" != want {
+		if want, _ := parser.GetOption("owner", "age"); want != "30" {
 			t.Errorf("Got error, want 30")
 		}
 	})
