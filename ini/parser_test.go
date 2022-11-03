@@ -26,6 +26,296 @@ var sampleContent = map[string]string{
 	"invalid_no_options":  "[owner]",
 }
 
+func BenchmarkValidParser(b *testing.B) {
+	b.Run("test_valid", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["valid"])
+
+			if err != nil {
+				b.Errorf("content is no valid")
+			}
+		}
+	})
+
+	b.Run("test_valid_comment", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["valid_comment"])
+
+			if err != nil {
+				b.Errorf("content is no valid")
+			}
+		}
+	})
+
+	b.Run("test_valid_empty", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["valid_empty"])
+
+			if err != nil {
+				b.Errorf("content is no valid")
+			}
+		}
+	})
+
+	b.Run("test_value", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["valid"])
+
+			if err != nil {
+				b.Errorf("function shouldn't throw errors")
+			}
+
+			if got, _ := parser.GetOption("owner", "name"); got != "John" {
+				b.Errorf("Got %v, want John", got)
+			}
+
+			if got, _ := parser.GetOption("owner", "organization"); got != "threefold" {
+				b.Errorf("Got %v, want threefold", got)
+			}
+
+			if got, _ := parser.GetOption("database", "server"); got != "192.0.2.62" {
+				b.Errorf("Got %v, want 192.0.2.62", got)
+			}
+
+			if got, _ := parser.GetOption("database", "port"); got != "143" {
+				b.Errorf("Got %v, want 143", got)
+			}
+
+			if got, _ := parser.GetOption("database", "password"); got != "123456" {
+				b.Errorf("Got %v, want 123456", got)
+			}
+
+			if got, _ := parser.GetOption("database", "protected"); got != "true" {
+				b.Errorf("Got %v, want true", got)
+			}
+
+			if got, _ := parser.GetOption("database", "version"); got != "12.6" {
+				b.Errorf("Got %v, want 12.6", got)
+			}
+
+			if got, _ := parser.GetBool("database", "protected"); got != true {
+				b.Errorf("Got %v, want true", got)
+			}
+
+			if got, _ := parser.GetInt("database", "port"); got != 143 {
+				b.Errorf("Got %v, want 143", got)
+			}
+
+			if got, _ := parser.GetFloat("database", "port"); got != 143 {
+				b.Errorf("Got %v, want 143", got)
+			}
+
+			if got, _ := parser.GetInt("database", "password"); got != 123456 {
+				b.Errorf("Got %v, want 123456", got)
+			}
+
+			if got, _ := parser.GetFloat("database", "version"); got != 12.6 {
+				b.Errorf("Got %v, want 12.6", got)
+			}
+		}
+	})
+
+	b.Run("test_parsed_sections", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["valid"])
+
+			if err != nil {
+				b.Errorf("unexpected error: %v", err)
+			}
+
+			want := []string{"owner", "database"}
+			got := parser.GetSections()
+
+			if !reflect.DeepEqual(want, got) {
+				b.Errorf("Got %v, want %v", got, want)
+			}
+		}
+	})
+
+	b.Run("test_parsed_section", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["valid"])
+
+			if err != nil {
+				b.Errorf("unexpected error: %v", err)
+			}
+
+			want := map[string]string{"name": "John", "organization": "threefold"}
+			got, _ := parser.GetSection("owner")
+
+			if !reflect.DeepEqual(want, got) {
+				b.Errorf("Got %v, want %v", got, want)
+			}
+		}
+	})
+
+	b.Run("test_parsed_options", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["valid"])
+
+			if err != nil {
+				b.Errorf("unexpected error: %v", err)
+			}
+
+			want := []string{"name", "organization"}
+			got := parser.GetOptions("owner")
+
+			if !reflect.DeepEqual(want, got) {
+				b.Errorf("Got %v, want %v", got, want)
+			}
+		}
+	})
+
+	b.Run("test_parsed_option", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["valid"])
+
+			if err != nil {
+				b.Errorf("unexpected error: %v", err)
+			}
+
+			if got, _ := parser.GetOption("owner", "name"); got != "John" {
+				b.Errorf("Got %v, want John", got)
+			}
+		}
+	})
+
+	b.Run("test_set_option", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["valid"])
+
+			if err != nil {
+				b.Errorf("unexpected error: %v", err)
+			}
+
+			parser.SetOption("owner", "name", "Ali")
+
+			if got, _ := parser.GetOption("owner", "name"); got != "Ali" {
+				b.Errorf("Got %v, want Ali", got)
+			}
+		}
+	})
+
+	b.Run("test_parsed_functions", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["valid"])
+
+			if err != nil {
+				b.Errorf("unexpected error: %v", err)
+			}
+
+			parsed := parser.GetParsedMap()
+
+			// parsed str
+			testParsedStr := parser.String()
+
+			// parsed map
+
+			parsedErr := parser.FromString(testParsedStr)
+
+			if parsedErr != nil {
+				b.Errorf("unexpected error: %v", parsedErr)
+			}
+
+			testParsedDict := parser.GetParsedMap()
+
+			if !reflect.DeepEqual(testParsedDict, parsed) {
+				b.Errorf("Got %v, want %v", testParsedDict, parsed)
+			}
+		}
+	})
+
+	b.Run("test_no_sections", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["invalid_no_sections"])
+
+			if err != nil {
+				b.Errorf("unexpected error: %v", err)
+			}
+
+			sections := parser.GetSections()
+
+			if len(sections) > 0 {
+				b.Errorf("Content have sections")
+			}
+		}
+	})
+
+	b.Run("test_no_options", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["invalid_no_options"])
+
+			if err != nil {
+				b.Errorf("unexpected error: %v", err)
+			}
+
+			options := parser.GetOptions("owner")
+
+			if len(options) > 0 {
+				b.Errorf("owner section has options")
+			}
+		}
+	})
+
+	b.Run("test_set_option_old_option", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["valid"])
+
+			if err != nil {
+				b.Errorf("unexpected error: %v", err)
+			}
+
+			parser.SetOption("owner", "name", "Ali")
+
+			if want, _ := parser.GetOption("owner", "name"); want == "John" {
+				b.Errorf("Got John, want Ali")
+			}
+		}
+	})
+
+	b.Run("test_set_option_no_option", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			parser := NewParser()
+			err := parser.FromString(sampleContent["valid"])
+
+			if err != nil {
+				b.Errorf("unexpected error: %v", err)
+			}
+
+			parser.SetOption("owner", "age", "30")
+
+			if want, _ := parser.GetOption("owner", "age"); want != "30" {
+				b.Errorf("Got error, want 30")
+			}
+		}
+	})
+}
+
+func TestHelpers(t *testing.T) {
+
+	t.Run("testContains", func(t *testing.T) {
+		arr := []string{"test1", "test2", "test3"}
+		exist := contains(arr, "test2")
+
+		if !exist {
+			t.Errorf("test2 should exist")
+		}
+	})
+}
+
 func TestValidParser(t *testing.T) {
 
 	t.Run("testValid", func(t *testing.T) {
@@ -33,7 +323,7 @@ func TestValidParser(t *testing.T) {
 		err := parser.FromString(sampleContent["valid"])
 
 		if err != nil {
-			t.Errorf("Content is no valid")
+			t.Errorf("content is no valid")
 		}
 	})
 
@@ -42,7 +332,7 @@ func TestValidParser(t *testing.T) {
 		err := parser.FromString(sampleContent["valid_comment"])
 
 		if err != nil {
-			t.Errorf("Content is no valid")
+			t.Errorf("content is no valid")
 		}
 	})
 
@@ -51,7 +341,7 @@ func TestValidParser(t *testing.T) {
 		err := parser.FromString(sampleContent["valid_empty"])
 
 		if err != nil {
-			t.Errorf("Content is no valid")
+			t.Errorf("content is no valid")
 		}
 	})
 

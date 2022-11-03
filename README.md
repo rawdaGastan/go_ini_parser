@@ -61,3 +61,48 @@ Use this command to run the tests
 ```bash
 go test -v ./...
 ```
+
+```bash
+task test
+```
+
+```bash
+make test
+```
+
+## Coverage
+
+- create a `coverage` folder
+- Use this command to see the coverage
+
+```bash
+mkdir coverage
+go test -v ./... -coverprofile=coverage/coverage.out
+go tool cover -html=coverage/coverage.out -o coverage/coverage.html
+```
+
+```bash
+task coverage
+```
+
+```bash
+make coverage
+```
+
+- Open coverage/coverage.html to trace the coverage
+
+## Benchmarks
+
+Use this command to run the tests
+
+```bash
+go test -v ./... -bench=. -count 1 -benchtime=10s -benchmem -run=^#
+```
+
+```bash
+make benchmarks
+```
+
+```bash
+task benchmarks
+```

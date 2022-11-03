@@ -1,0 +1,381 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>ini: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">parser/ini/helpers.go (100.0%)</option>
+				
+				<option value="file1">parser/ini/parser.go (83.2%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package ini
+
+func contains(array []string, element string) bool <span class="cov8" title="1">{
+        for _, x := range array </span><span class="cov8" title="1">{
+                if x == element </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+        <span class="cov8" title="1">return false</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package ini
+
+import (
+        "bufio"
+        "fmt"
+        "os"
+        "strconv"
+        s "strings"
+)
+
+type Entry = map[string]string
+type INIMap = map[string]Entry
+
+// Parser
+type Parser struct {
+        parsedMap INIMap
+}
+
+func (p *Parser) ensureSection(parent string) <span class="cov8" title="1">{
+        // check if the parent does not exist in the parsed dict
+        if p.parsedMap[parent] == nil </span><span class="cov8" title="1">{
+                p.parsedMap[parent] = Entry{}
+        }</span>
+}
+
+func (p *Parser) add(parent string, key string, value string) <span class="cov8" title="1">{
+        // add the parent first
+        p.ensureSection(parent)
+
+        p.parsedMap[parent][key] = value
+}</span>
+
+// NewParser creates new instance from the parser
+func NewParser() Parser <span class="cov8" title="1">{
+        parser := Parser{}
+        return parser
+}</span>
+
+// GetParsedMap return the parsed map of the struct
+func (p *Parser) GetParsedMap() INIMap <span class="cov8" title="1">{
+        return p.parsedMap
+}</span>
+
+// String converts the parsed map to ini string and returns it
+func (p *Parser) String() string <span class="cov8" title="1">{
+        formattedStr := ""
+
+        for parent, dict := range p.parsedMap </span><span class="cov8" title="1">{
+                formattedStr += fmt.Sprintf("[%s]\n", parent)
+                for key, val := range dict </span><span class="cov8" title="1">{
+                        formattedStr += fmt.Sprintf("%s = %s\n", key, val)
+                }</span>
+                <span class="cov8" title="1">formattedStr += "\n"</span>
+        }
+
+        <span class="cov8" title="1">return formattedStr</span>
+}
+
+// FromFile read an ini file and converts it to a parsed map
+func (p *Parser) FromFile(filename string) error <span class="cov0" title="0">{
+        file, err := os.ReadFile(filename)
+
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">return p.FromString(string(file))</span>
+}
+
+// SaveToFile saves the parsed map as ini file in the specified path after converting to string
+func (p *Parser) SaveToFile(path string) error <span class="cov0" title="0">{
+
+        file, err := os.Create(path)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">defer file.Close()
+
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">_, writeErr := file.WriteString(p.String())
+
+        return writeErr</span>
+}
+
+// FromString parses the ini content as :
+// [section1: map[key1: value1 key2: value2 ...] section2: map[key1: value1 key2: value2 ...] ...]
+func (p *Parser) FromString(content string) error <span class="cov8" title="1">{
+
+        p.parsedMap = INIMap{}
+        key := ""
+        val := ""
+        section := ""
+
+        // for parents
+        newSection := false
+
+        // read content lines
+        scanner := bufio.NewScanner(s.NewReader(content))
+        for scanner.Scan() </span><span class="cov8" title="1">{
+                line := s.ReplaceAll(scanner.Text(), "\n", "")
+                line = s.ReplaceAll(line, "\r", "")
+
+                if len(line) &gt; 0 </span><span class="cov8" title="1">{
+                        // parse sections
+                        if string(line[0]) == "[" &amp;&amp; string(line[len(line)-1]) == "]" </span><span class="cov8" title="1">{
+                                // check number of opened and closed sections []
+                                if s.Count(line, "[") == 1 &amp;&amp; s.Count(line, "]") == 1 </span><span class="cov8" title="1">{
+                                        section = line[1 : len(line)-1]
+                                        p.ensureSection(section)
+                                        newSection = true
+                                }</span> else<span class="cov8" title="1"> {
+                                        return fmt.Errorf("invalid section %v! please make sure that you have one '[' and one ']'", section)
+                                }</span>
+
+                                // parse sections values
+                        } else<span class="cov8" title="1"> if newSection &amp;&amp; s.Count(line, "=") == 1 &amp;&amp; (!contains([]string{"", "=", " "}, string(line[0])) &amp;&amp; !contains([]string{"", "=", " "}, string(line[len(line)-1]))) </span><span class="cov8" title="1">{
+                                if s.Contains(line, " = ") </span><span class="cov8" title="1">{
+                                        splitted := s.Split(line, " = ")
+                                        key = splitted[0]
+                                        val = splitted[1]
+                                }</span> else<span class="cov8" title="1"> if s.Contains(line, "=") </span><span class="cov8" title="1">{
+                                        splitted := s.Split(line, "=")
+                                        key = splitted[0]
+                                        val = splitted[1]
+                                }</span>
+
+                                <span class="cov8" title="1">p.add(section, key, val)</span>
+
+                                // parse comment lines
+                        } else<span class="cov8" title="1"> if string(line[0]) == ";" </span><span class="cov8" title="1">{
+                                continue</span>
+
+                                // invlid content
+                        } else<span class="cov8" title="1"> {
+                                return fmt.Errorf("invalid ini content")
+                        }</span>
+
+                        // parse empty
+                } else<span class="cov8" title="1"> if s.Trim(line, " ") == "" </span><span class="cov8" title="1">{
+                        continue</span>
+
+                        // invlid content
+                } else<span class="cov0" title="0"> {
+                        return fmt.Errorf("invalid ini content")
+                }</span>
+        }
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+// GetSections returns a list of all sections --&gt; [section1 section2 ...]
+func (p *Parser) GetSections() []string <span class="cov8" title="1">{
+
+        var sections []string
+
+        for parent := range p.parsedMap </span><span class="cov8" title="1">{
+                sections = append(sections, parent)
+        }</span>
+
+        <span class="cov8" title="1">return sections</span>
+}
+
+// GetSection returns a dictionary for the section given --&gt; map[key1: val1 key2: val2 ....]
+func (p *Parser) GetSection(sectionKey string) (Entry, error) <span class="cov8" title="1">{
+
+        sections := p.GetSections()
+        var section Entry
+
+        if !contains(sections, sectionKey) </span><span class="cov8" title="1">{
+                return section, fmt.Errorf("section %v does not exist", sectionKey)
+        }</span> else<span class="cov8" title="1"> {
+                section = p.parsedMap[sectionKey]
+        }</span>
+        <span class="cov8" title="1">return section, nil</span>
+}
+
+// GetOptions returns all options of the given section
+func (p *Parser) GetOptions(sectionKey string) []string <span class="cov8" title="1">{
+
+        section, _ := p.GetSection(sectionKey)
+        var options []string
+
+        for key := range section </span><span class="cov8" title="1">{
+                options = append(options, key)
+        }</span>
+
+        <span class="cov8" title="1">return options</span>
+}
+
+// GetOption returns the value of the option key which belongs to the section key given
+func (p *Parser) GetOption(sectionKey string, optionKey string) (string, error) <span class="cov8" title="1">{
+
+        option := ""
+
+        if option, exists := p.parsedMap[sectionKey][optionKey]; exists </span><span class="cov8" title="1">{
+                return option, nil
+        }</span>
+
+        <span class="cov8" title="1">return option, fmt.Errorf("option %v does not exist in the given section %v", optionKey, sectionKey)</span>
+}
+
+// SetOption updates the option value in the given section
+// If the section key does not exist it inserts the section key in the map with its option and value
+func (p *Parser) SetOption(sectionKey string, optionKey string, optionValue string) <span class="cov8" title="1">{
+        p.parsedMap[sectionKey][optionKey] = optionValue
+}</span>
+
+// GetBool returns the bool value of the option key which belongs to the section key given
+// Bool could be : true, false, True, False, yes, no, 1, 0
+func (p *Parser) GetBool(sectionKey string, optionKey string) (bool, error) <span class="cov8" title="1">{
+
+        boolOption := false
+
+        option, err := p.GetOption(sectionKey, optionKey)
+
+        if err != nil </span><span class="cov0" title="0">{
+                return boolOption, err
+        }</span>
+
+        <span class="cov8" title="1">if contains([]string{"true", "True", "yes", "1"}, option) </span><span class="cov8" title="1">{
+                boolOption = true
+
+        }</span> else<span class="cov8" title="1"> if contains([]string{"false", "False", "no", "0"}, option) </span><span class="cov0" title="0">{
+                boolOption = false
+
+        }</span> else<span class="cov8" title="1"> {
+                return boolOption, fmt.Errorf("%v is not a valid boolean", option)
+        }</span>
+
+        <span class="cov8" title="1">return boolOption, nil</span>
+}
+
+// GetInt returns the int value of the option key which belongs to the section key given
+func (p *Parser) GetInt(sectionKey string, optionKey string) (int64, error) <span class="cov8" title="1">{
+
+        option, err := p.GetOption(sectionKey, optionKey)
+        var parsedInt int64
+
+        if err != nil </span><span class="cov0" title="0">{
+                return parsedInt, err
+        }</span>
+
+        <span class="cov8" title="1">parsedInt, intErr := strconv.ParseInt(option, 10, 32)
+
+        return parsedInt, intErr</span>
+}
+
+// GetFloat returns the float value of the option key which belongs to the section key given
+func (p *Parser) GetFloat(sectionKey string, optionKey string) (float64, error) <span class="cov8" title="1">{
+
+        option, err := p.GetOption(sectionKey, optionKey)
+        var parsedFloat float64
+
+        if err != nil </span><span class="cov0" title="0">{
+                return parsedFloat, err
+        }</span>
+
+        <span class="cov8" title="1">parsedFloat, floatErr := strconv.ParseFloat(option, 64)
+
+        return parsedFloat, floatErr</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
